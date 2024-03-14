@@ -1,0 +1,85 @@
+version: "3.7"
+
+networks:
+  shift_tasks_backend_network:
+    name: shift_tasks_backend_network
+    driver: bridge
+  testing_shift_tasks_network:
+    name: testing_shift_tasks_network
+    driver: bridge
+
+services:
+  shift_tasks_db:
+    build:
+      context: ../
+      dockerfile: Dockerfile.postgres
+    container_name: shift_tasks_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_DB_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    ports:
+      - ${POSTGRES_EXTERNAL_PORT}:5432
+    volumes:
+      - shift_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-U ", $POSTGRES_DB_USER, "-d ", $POSTGRES_DB_NAME ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - shift_tasks_backend_network
+
+  shift_tasks_backend:
+    build:
+      context: ../
+      dockerfile: Dockerfile.backend
+    container_name: shift_tasks_backend
+    env_file:
+      - .env
+    ports:
+      - ${EXTERNAL_APP_PORT}:${APP_PORT}
+    healthcheck:
+      test: curl --fail http://localhost:${APP_PORT}/docs || exit 1
+      retries: 5
+      timeout: 3s
+      interval: 5s
+      start_period: 10s
+    restart: "on-failure:5"
+    networks:
+      - shift_tasks_backend_network
+
+  testing_shift_tasks_backend:
+    build:
+      context: ../
+      dockerfile: Dockerfile.backend
+    container_name: testing_shift_tasks_backend
+    env_file:
+      - .env
+    depends_on:
+      - testing_shift_tasks_db
+    command: "pytest"
+    volumes:
+      - .:/app
+      - test_coverage:/coverage
+    networks:
+      - testing_shift_tasks_network
+
+  testing_shift_tasks_db:
+    image: postgres
+    container_name: testing_shift_tasks_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_TEST_NAME}
+      POSTGRES_USER: ${POSTGRES_DB_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_PASSWORD}
+    volumes:
+      - test_db_data:/var/lib/postgresql/data
+    networks:
+      - testing_shift_tasks_network
+
+volumes:
+  shift_postgres_data:
+  test_coverage:
+  test_db_data:

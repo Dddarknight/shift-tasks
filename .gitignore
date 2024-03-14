@@ -1,0 +1,11 @@
+.idea/
+venv/
+.env
+deploy/.env
+.pytest_cache
+.ruff_cache
+.coverage
+*pycache*
+.DS_Store
+*.pyc
+__pycache__

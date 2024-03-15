@@ -127,6 +127,21 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v2
 
+      - name: Set environment variables
+        run: |
+          echo "DATABASE_TEST_URL=${{ secrets.DATABASE_TEST_URL }}" >> $GITHUB_ENV
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+          echo "POSTGRES_DB_USER=${{ secrets.POSTGRES_DB_USER }}" >> $GITHUB_ENV
+          echo "POSTGRES_DB_PASSWORD=${{ secrets.POSTGRES_DB_PASSWORD }}" >> $GITHUB_ENV
+          echo "POSTGRES_DB_NAME=${{ secrets.POSTGRES_DB_NAME }}" >> $GITHUB_ENV
+          echo "POSTGRES_DB_TEST_NAME=${{ secrets.POSTGRES_DB_TEST_NAME }}" >> $GITHUB_ENV
+          echo "APP_PORT=${{ secrets.APP_PORT }}" >> $GITHUB_ENV
+          echo "HOST=${{ secrets.HOST }}" >> $GITHUB_ENV
+          echo "CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}" >> $GITHUB_ENV
+          echo "CORS_HEADERS=${{ secrets.CORS_HEADERS }}" >> $GITHUB_ENV
+          echo "EXTERNAL_APP_PORT=${{ secrets.EXTERNAL_APP_PORT }}" >> $GITHUB_ENV
+          echo "POSTGRES_EXTERNAL_PORT=${{ secrets.POSTGRES_EXTERNAL_PORT }}" >> $GITHUB_ENV
+
       - name: Run tests
         run: docker-compose -f deploy/docker-compose.yml up --abort-on-container-exit --exit-code-from testing_shift_tasks_backend
 

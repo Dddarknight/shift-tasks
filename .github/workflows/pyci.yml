@@ -123,18 +123,18 @@ jobs:
       - name: Run tests in the Docker container
         run: |
           docker run --name testing_shift_tasks_backend \
-            -e DATABASE_TEST_URL=${{ secrets.DATABASE_TEST_URL }} \
-            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-            -e POSTGRES_DB_USER=${{ secrets.POSTGRES_DB_USER }} \
-            -e POSTGRES_DB_PASSWORD=${{ secrets.POSTGRES_DB_PASSWORD }} \
-            -e POSTGRES_DB_NAME=${{ secrets.POSTGRES_DB_NAME }} \
-            -e POSTGRES_DB_TEST_NAME=${{ secrets.POSTGRES_DB_TEST_NAME }} \
-            -e APP_PORT=${{ secrets.APP_PORT }} \
-            -e HOST=${{ secrets.HOST }} \
+            -e DATABASE_TEST_URL=postgresql+asyncpg://username:password@testing_shift_tasks_db:5432/test_db \
+            -e DATABASE_URL=postgresql+asyncpg://username:password@shift_tasks_db:5432/shift_tasks_db \
+            -e POSTGRES_DB_USER=username \
+            -e POSTGRES_DB_PASSWORD=password \
+            -e POSTGRES_DB_NAME=shift_tasks_db \
+            -e POSTGRES_DB_TEST_NAME=test_db \
+            -e APP_PORT=8000 \
+            -e HOST=localhost \
             -e CORS_ORIGINS='["*"]' \
             -e CORS_HEADERS='["*"]' \
-            -e EXTERNAL_APP_PORT=${{ secrets.EXTERNAL_APP_PORT }} \
-            -e POSTGRES_EXTERNAL_PORT=${{ secrets.POSTGRES_EXTERNAL_PORT }} \
+            -e EXTERNAL_APP_PORT=8000 \
+            -e POSTGRES_EXTERNAL_PORT=5433 \
             ghcr.io/dddarknight/testing_shift_tasks_backend:latest pytest
 
       - name: Cleanup

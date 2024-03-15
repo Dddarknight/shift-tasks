@@ -120,6 +120,14 @@ jobs:
             EXTERNAL_APP_PORT=${{ secrets.EXTERNAL_APP_PORT }}
             POSTGRES_EXTERNAL_PORT=${{ secrets.POSTGRES_EXTERNAL_PORT }}
 
+      - name: Run PostgreSQL Docker container for testing
+        run: |
+          docker run -d --name testing_shift_tasks_db \
+            -e POSTGRES_DB_USER=username \
+            -e POSTGRES_DB_PASSWORD=password \
+            -e POSTGRES_DB=test_db \
+            ghcr.io/dddarknight/testing_shift_tasks_db:latest
+
       - name: Run tests in the Docker container
         run: |
           docker run --name testing_shift_tasks_backend \

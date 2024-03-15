@@ -120,9 +120,13 @@ jobs:
             EXTERNAL_APP_PORT=${{ secrets.EXTERNAL_APP_PORT }}
             POSTGRES_EXTERNAL_PORT=${{ secrets.POSTGRES_EXTERNAL_PORT }}
 
+      - name: Create Docker network
+        run: docker network create testing_network
+
       - name: Run PostgreSQL Docker container for testing
         run: |
           docker run -d --name testing_shift_tasks_db \
+            --network testing_network \
             -e POSTGRES_DB_USER=username \
             -e POSTGRES_DB_PASSWORD=password \
             -e POSTGRES_DB=test_db \
@@ -131,6 +135,7 @@ jobs:
       - name: Run tests in the Docker container
         run: |
           docker run --name testing_shift_tasks_backend \
+            --network testing_network \
             -e DATABASE_TEST_URL=postgresql+asyncpg://username:password@testing_shift_tasks_db:5432/test_db \
             -e DATABASE_URL=postgresql+asyncpg://username:password@shift_tasks_db:5432/shift_tasks_db \
             -e POSTGRES_DB_USER=username \
@@ -146,4 +151,7 @@ jobs:
             ghcr.io/dddarknight/testing_shift_tasks_backend:latest pytest
 
       - name: Cleanup
-        run: docker rm testing_shift_tasks_backend
+        run: |
+          docker rm testing_shift_tasks_backend
+          docker rm testing_shift_tasks_db
+          docker network rm testing_network

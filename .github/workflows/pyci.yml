@@ -127,6 +127,7 @@ jobs:
         run: |
           docker run -d --name testing_shift_tasks_db \
             --network testing_network \
+            -p 5432:5432 \
             -e POSTGRES_DB_USER=username \
             -e POSTGRES_DB_PASSWORD=password \
             -e POSTGRES_DB=test_db \

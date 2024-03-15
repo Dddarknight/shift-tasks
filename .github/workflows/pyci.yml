@@ -131,8 +131,8 @@ jobs:
             -e POSTGRES_DB_TEST_NAME=${{ secrets.POSTGRES_DB_TEST_NAME }} \
             -e APP_PORT=${{ secrets.APP_PORT }} \
             -e HOST=${{ secrets.HOST }} \
-            -e CORS_ORIGINS=${{ secrets.CORS_ORIGINS }} \
-            -e CORS_HEADERS=${{ secrets.CORS_HEADERS }} \
+            -e CORS_ORIGINS='["*"]' \
+            -e CORS_HEADERS='["*"]' \
             -e EXTERNAL_APP_PORT=${{ secrets.EXTERNAL_APP_PORT }} \
             -e POSTGRES_EXTERNAL_PORT=${{ secrets.POSTGRES_EXTERNAL_PORT }} \
             ghcr.io/dddarknight/testing_shift_tasks_backend:latest pytest

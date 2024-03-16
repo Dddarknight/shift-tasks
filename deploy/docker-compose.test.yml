@@ -12,6 +12,7 @@ services:
       dockerfile: Dockerfile.backend.test
     container_name: testing_shift_tasks_backend
     environment:
+      DATABASE_URL: postgresql+asyncpg://username:123@testing_shift_tasks_db:5432/test_db
       DATABASE_TEST_URL: postgresql+asyncpg://username:123@testing_shift_tasks_db:5432/test_db
       APP_PORT: 8000
       HOST: localhost

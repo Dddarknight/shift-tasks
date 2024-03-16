@@ -91,68 +91,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image for testing PostgreSQL
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: Dockerfile.postgres
-          push: true
-          tags: ghcr.io/dddarknight/testing_shift_tasks_db:latest
-
-      - name: Build and push Docker image for testing backend
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: Dockerfile.backend
-          push: true
-          tags: ghcr.io/dddarknight/testing_shift_tasks_backend:latest
-          build-args: |
-            DATABASE_TEST_URL=${{ secrets.DATABASE_TEST_URL }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            POSTGRES_DB_USER=${{ secrets.POSTGRES_DB_USER }}
-            POSTGRES_DB_PASSWORD=${{ secrets.POSTGRES_DB_PASSWORD }}
-            POSTGRES_DB_NAME=${{ secrets.POSTGRES_DB_NAME }}
-            POSTGRES_DB_TEST_NAME=${{ secrets.POSTGRES_DB_TEST_NAME }}
-            APP_PORT=${{ secrets.APP_PORT }}
-            HOST=${{ secrets.HOST }}
-            CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
-            CORS_HEADERS=${{ secrets.CORS_HEADERS }}
-            EXTERNAL_APP_PORT=${{ secrets.EXTERNAL_APP_PORT }}
-            POSTGRES_EXTERNAL_PORT=${{ secrets.POSTGRES_EXTERNAL_PORT }}
-
-      - name: Create Docker network
-        run: docker network create testing_network
-
-      - name: Run PostgreSQL Docker container for testing
+      - name: Build and run the Docker containers with Docker Compose
         run: |
-          docker run -d --name testing_shift_tasks_db \
-            --network testing_network \
-            -p 5432:5432 \
-            -e POSTGRES_DB_USER=username \
-            -e POSTGRES_DB_PASSWORD=password \
-            -e POSTGRES_DB=test_db \
-            ghcr.io/dddarknight/testing_shift_tasks_db:latest
+          docker compose -f ./deploy/docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from testing_shift_tasks_backend
 
-      - name: Run tests in the Docker container
+      - name: Docker Compose down and cleanup
+        if: always()
         run: |
-          docker run --name testing_shift_tasks_backend \
-            --network testing_network \
-            -e DATABASE_TEST_URL=postgresql+asyncpg://username:password@testing_shift_tasks_db:5432/test_db \
-            -e DATABASE_URL=postgresql+asyncpg://username:password@shift_tasks_db:5432/shift_tasks_db \
-            -e POSTGRES_DB_USER=username \
-            -e POSTGRES_DB_PASSWORD=password \
-            -e POSTGRES_DB_NAME=shift_tasks_db \
-            -e POSTGRES_DB_TEST_NAME=test_db \
-            -e APP_PORT=8000 \
-            -e HOST=localhost \
-            -e CORS_ORIGINS='["*"]' \
-            -e CORS_HEADERS='["*"]' \
-            -e EXTERNAL_APP_PORT=8000 \
-            -e POSTGRES_EXTERNAL_PORT=5433 \
-            ghcr.io/dddarknight/testing_shift_tasks_backend:latest pytest
-
-      - name: Cleanup
-        run: |
-          docker rm testing_shift_tasks_backend
-          docker rm testing_shift_tasks_db
-          docker network rm testing_network
+          docker compose -f ./deploy/docker-compose.test.yml down
+          docker volume rm $(docker volume ls -q)
